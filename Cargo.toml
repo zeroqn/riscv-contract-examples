@@ -9,3 +9,4 @@ edition = "2018"
 [dependencies]
 cita-vm = { git = "https://github.com/citahub/cita-vm" }
 ethereum-types = "0.4"
+hex = "0.4.0"
