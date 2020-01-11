@@ -1,9 +1,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "ballot.h"
 #include "pvm.h"
 #include "pvm_extend.h"
-#include "ballot.h"
 
 // Constants
 // Use const uint8_t so that we can easily pvm_save and pvm_ret
@@ -180,8 +180,7 @@ int main(int argc, char *argv[]) {
     addr_t caller;
     pvm_caller(caller.addr);
 
-    int is_voter = has_vote_right(caller);
-    if (FALSE == is_voter) {
+    if (FALSE == has_vote_right(caller)) {
       pvm_ret((uint8_t *)&NO_RIGHT, 1);
     } else {
       pvm_ret((uint8_t *)&HAS_VOTER_RIGHT, 1);
