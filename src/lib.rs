@@ -3,7 +3,11 @@ mod tests {
     use cita_vm::{Context, FakeVM, InterpreterResult, InterpreterType, Transaction};
     use ethereum_types::{Address, U256};
 
-    use std::{fs, ops::Deref, rc::Rc};
+    use std::{
+        fs,
+        ops::{Deref, DerefMut},
+        rc::Rc,
+    };
 
     const BALLOT_BINARY_PATH: &str = "./build/ballot";
 
@@ -43,15 +47,32 @@ mod tests {
         }
     }
 
+    #[derive(Debug, Clone)]
+    struct Owner(User);
+
+    impl Deref for Owner {
+        type Target = User;
+
+        fn deref(&self) -> &User {
+            &self.0
+        }
+    }
+
+    impl DerefMut for Owner {
+        fn deref_mut(&mut self) -> &mut User {
+            &mut self.0
+        }
+    }
+
     struct Ballot {
         vm: FakeVM,
         addr: Address,
     }
 
     impl Ballot {
-        pub fn deploy(vm: FakeVM, owner: &mut User) -> Self {
+        pub fn deploy(vm: FakeVM, owner: &mut Owner) -> Self {
             let tx = Transaction {
-                from: **owner,
+                from: ***owner,
                 to: None,
                 value: U256::from(0),
                 nonce: owner.nonce(),
@@ -91,7 +112,7 @@ mod tests {
             String::from_utf8(val).expect("parse topic")
         }
 
-        pub fn set_topic(&self, owner: &mut User, topic: &str) {
+        pub fn set_topic(&self, owner: &mut Owner, topic: &str) {
             let tx = self.create_tx(owner, vec!["set_topic".into(), topic.into()]);
             self.exec_unwrap(tx, "set_topic");
         }
@@ -107,7 +128,7 @@ mod tests {
             }
         }
 
-        pub fn authorize_vote_right(&self, owner: &mut User, user: &User) {
+        pub fn authorize_vote_right(&self, owner: &mut Owner, user: &User) {
             let user_addr = hex::encode(user.to_vec()).as_bytes().to_vec();
 
             let tx = self.create_tx(owner, vec!["authorize_vote_right".into(), user_addr]);
@@ -115,13 +136,13 @@ mod tests {
             self.exec_unwrap(tx, "authorize_vote_right");
         }
 
-        pub fn start_vote(&self, owner: &mut User) {
+        pub fn start_vote(&self, owner: &mut Owner) {
             let tx = self.create_tx(owner, vec!["start_vote".into()]);
 
             self.exec_unwrap(tx, "start_vote");
         }
 
-        pub fn end_vote(&self, owner: &mut User) {
+        pub fn end_vote(&self, owner: &mut Owner) {
             let tx = self.create_tx(owner, vec!["end_vote".into()]);
 
             self.exec_unwrap(tx, "end_vote");
@@ -169,11 +190,11 @@ mod tests {
     #[test]
     fn test_ballot() {
         let vm = cita_vm::FakeVM::new();
-        let mut owner = User::new(vm.account1);
+        let mut owner = Owner(User::new(vm.account1));
         let mut voter = User::new(vm.account2);
 
         let ballot = Ballot::deploy(vm, &mut owner);
-        assert_eq!(ballot.get_owner(&mut voter), *owner, "should have owner");
+        assert_eq!(ballot.get_owner(&mut voter), **owner, "should have owner");
 
         ballot.set_topic(&mut owner, "Moon ?");
         assert_eq!(&ballot.get_topic(&mut voter), "Moon ?", "should set topic");
@@ -187,6 +208,10 @@ mod tests {
         ballot.vote(&mut voter);
         ballot.end_vote(&mut owner);
 
-        assert_eq!(ballot.ann_result(&mut voter), BallotResult::Approved);
+        assert_eq!(
+            ballot.ann_result(&mut voter),
+            BallotResult::Approved,
+            "should be approved"
+        );
     }
 }
