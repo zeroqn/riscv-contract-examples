@@ -7,6 +7,12 @@ mod tests {
 
     const BALLOT_BINARY_PATH: &str = "./build/ballot";
 
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum BallotResult {
+        Approved,
+        Failed,
+    }
+
     #[derive(Debug, Clone)]
     struct User {
         addr: Address,
@@ -109,6 +115,36 @@ mod tests {
             self.exec_unwrap(tx, "authorize_vote_right");
         }
 
+        pub fn start_vote(&self, owner: &mut User) {
+            let tx = self.create_tx(owner, vec!["start_vote".into()]);
+
+            self.exec_unwrap(tx, "start_vote");
+        }
+
+        pub fn end_vote(&self, owner: &mut User) {
+            let tx = self.create_tx(owner, vec!["end_vote".into()]);
+
+            self.exec_unwrap(tx, "end_vote");
+        }
+
+        pub fn vote(&self, voter: &mut User) {
+            let tx = self.create_tx(voter, vec!["vote".into(), "yea".into()]);
+
+            self.exec_unwrap(tx, "vote");
+        }
+
+        pub fn ann_result(&self, voter: &mut User) -> BallotResult {
+            let tx = self.create_tx(voter, vec!["ann_result".into()]);
+
+            let ret = self.exec_unwrap(tx, "ann_result");
+
+            if ret.get(0) == Some(&1) {
+                BallotResult::Approved
+            } else {
+                BallotResult::Failed
+            }
+        }
+
         fn create_tx(&self, caller: &mut User, params: Vec<Vec<u8>>) -> Transaction {
             Transaction {
                 from: **caller,
@@ -146,5 +182,11 @@ mod tests {
 
         ballot.authorize_vote_right(&mut owner, &voter);
         assert_eq!(ballot.is_voter(&mut voter), true, "should have right");
+
+        ballot.start_vote(&mut owner);
+        ballot.vote(&mut voter);
+        ballot.end_vote(&mut owner);
+
+        assert_eq!(ballot.ann_result(&mut voter), BallotResult::Approved);
     }
 }

@@ -120,17 +120,17 @@ int main(int argc, char *argv[]) {
 
   // Load state value
   uint8_t sv[1] = { 0 };
-  pvm_load(&state_key[0], strlen(STATE_KEY), &sv[0], 1, NULL);
+  pvm_load(state_key, strlen(STATE_KEY), sv, 1, NULL);
   state = sv[0];
 
   // Load voter count
   uint8_t vc[8] = { 0 };
-  pvm_load(&total_voter_key[0], strlen(TOTAL_VOTER), &vc[0], 8, NULL);
+  pvm_load(total_voter_key, strlen(TOTAL_VOTER), vc, 8, NULL);
   total_voter = *vc;
 
   // Load yea count
-  uint8_t yc[8];
-  pvm_load(&yea_count_key[0], strlen(YEA_COUNT_KEY), &yc[0], 8, NULL);
+  uint8_t yc[8] = { 0 };
+  pvm_load(yea_count_key, strlen(YEA_COUNT_KEY), yc, 8, NULL);
   yea_count = *yc;
 
   // ### Contract APIs
@@ -238,7 +238,7 @@ int main(int argc, char *argv[]) {
     pvm_save(user.addr, ADDRESS_SIZE, voter.state, sizeof(voter.state));
 
     ++total_voter;
-    pvm_save(&total_voter_key[0], strlen(TOTAL_VOTER), (uint8_t *)total_voter, 8);
+    pvm_save(total_voter_key, strlen(TOTAL_VOTER), (uint8_t *)&total_voter, 8);
 
     return SUCCESS;
   }
@@ -280,7 +280,7 @@ int main(int argc, char *argv[]) {
       }
 
       uint8_t started_state[1] = {STARTED};
-      pvm_save(&state_key[0], strlen(STATE_KEY), &started_state[0], 1);
+      pvm_save(state_key, strlen(STATE_KEY), started_state, 1);
 
       return SUCCESS;
   }
@@ -303,7 +303,7 @@ int main(int argc, char *argv[]) {
       }
 
       uint8_t end_state[1] = {END};
-      pvm_save(&state_key[0], strlen(STATE_KEY), &end_state[0], 1);
+      pvm_save(state_key, strlen(STATE_KEY), end_state, 1);
 
       return SUCCESS;
   }
@@ -345,6 +345,12 @@ int main(int argc, char *argv[]) {
 
       voter.state[1] = vote;
       pvm_save(caller.addr, ADDRESS_SIZE, voter.state, sizeof(voter.state));
+
+      if (vote == YEA) {
+          ++yea_count;
+
+          pvm_save(yea_count_key, strlen(YEA_COUNT_KEY), (uint8_t *)&yea_count, 8); 
+      }
 
       return SUCCESS;
   }
