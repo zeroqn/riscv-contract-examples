@@ -59,9 +59,13 @@
 #define ANN_RESULT "ann_result"
 
 // Types
+
+// Address
 typedef struct addr_t {
   uint8_t addr[ADDRESS_SIZE];
 } addr_t;
+
+// Topic
 typedef struct topic_t {
   char str[MAX_TOPIC_LEN];
 } topic_t;
