@@ -85,6 +85,10 @@ int main(int argc, char *argv[]) {
       return ERR_METHOD_ARG_NUM;
     }
 
+    if (TRUE == is_empty(owner.addr, ADDRESS_SIZE)) {
+        return ERR_OWNER_NO_SET;
+    }
+
     pvm_ret(owner.addr, ADDRESS_SIZE);
     return SUCCESS;
   }
@@ -115,7 +119,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (FALSE == is_empty((uint8_t *)topic.str, strlen(topic.str))) {
-      return ERR_TOPIC_NO_SET;
+      return ERR_TOPIC_ALREADY_SET;
     }
 
     addr_t caller;
