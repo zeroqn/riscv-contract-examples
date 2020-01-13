@@ -38,8 +38,7 @@ int main(int argc, char *argv[]) {
 
   // ### Initialize state
 
-  // Load contract owner, ERR_NO_KEY means we are deploying contract,
-  // set owner to contract deployer.
+  // Load contract owner
   pvm_load(owner_key, strlen(OWNER_KEY), owner.addr, ADDRESS_SIZE, NULL);
 
   // Load topic
